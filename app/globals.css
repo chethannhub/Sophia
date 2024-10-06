@@ -20,6 +20,16 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.bg-gradient-dark-black {
+  background: linear-gradient(
+    to right,
+    #000000 0%,   
+    #0e1a2e 50%,  
+    #000000 100%  
+  );
+}
+
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
