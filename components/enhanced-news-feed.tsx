@@ -12,16 +12,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PlusCircle, Newspaper, MessageSquare, ShoppingCart, Search, Trash2, Headphones, MessageCircle, X, Menu, PlayCircle, PauseCircle , MinusCircle} from 'lucide-react'
+import { PlusCircle, MessageSquare, ShoppingCart, Search, Trash2, Headphones, MessageCircle, X, Menu, PlayCircle, PauseCircle , MinusCircle} from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { Download } from 'lucide-react';
 
 import ChatDialog from "./ChatDialog"
 
+
 // Add this interface near the top of your file
 
-const url = "https://news-teller-b-2.azurewebsites.net";
+const url = "https://serverless-3.azurewebsites.net/";
 
 interface Article {
   publishedAt: string | number | Date;
@@ -70,8 +71,9 @@ const fetchNews = async (
       title: item.title,
       brief: item.brief,
       image: item.image || "https://www.sandipuniversity.edu.in/computer-science/images/header/BTech-CSE-with-specialisation-Artificial-Intelligence-and-Machine-Learning.jpg",
-      content: (item.content || 'Lorem ipsum dolor sit amet...').slice(0, 600)+'.....',
+      content: (item.content || 'Lorem ipsum dolor sit amet...').slice(0, 1000)+'.....',
       urls: item.urls,
+      author:item.author,
       label: item.label,
     }));
 
@@ -85,6 +87,7 @@ const fetchNews = async (
     return [];
   }
 };
+
 
 
 
@@ -386,11 +389,24 @@ export function EnhancedNewsFeedComponent() {
   return (
     <div className="min-h-screen bg-background text-xs">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      {/* <header className="sticky top-0 z-50 w-full border-b bg-gradient-dark-black backdrop-blur"> */}
+  
         <div className="container flex h-14 items-center">
           <div className="mr-4 hidden md:flex">
-          <Image src="/logo.svg" alt="Logo" width={100} height={100} className="pl-4" />
-            <nav className="flex items-center space-x-6 text-xs font-medium">
+            <a href='/'>
+            <Image src="/logo.svg" alt="Logo" width={100} height={100} className="pl-4" />
 
+            </a>
+            <nav className="flex items-center space-x-6 text-xs font-medium">
+            <Button
+            variant="outline"
+            size="icon"
+            className="fixed bottom-4 top-3 right-4 "
+            style={{zIndex:999}}
+            onClick={() => toggleSidebar()}
+          >
+            {isSidebarVisible ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </Button>
 
 
             </nav>
@@ -421,7 +437,7 @@ export function EnhancedNewsFeedComponent() {
                 <SelectContent>
                   <SelectItem value="All">All Categories</SelectItem>
                   <SelectItem value="AIML">AIML</SelectItem>
-                  <SelectItem value="AR-VR">AR-VR</SelectItem>
+                  {/* <SelectItem value="AR-VR">AR-VR</SelectItem> */}
                   <SelectItem value="Block Chain">Block Chain</SelectItem>
                 </SelectContent>
               </Select>
@@ -452,6 +468,16 @@ export function EnhancedNewsFeedComponent() {
                       </CardContent>
                       <CardFooter className="flex justify-between mt-auto">
                         <Button variant="outline" size="sm" onClick={() => openModal(article)}>Read More</Button>
+
+                        <a 
+                          href={(article.urls).toString()} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-sm hover:text-blue-500 transition-colors duration-300 flex items-center"
+                        >
+                          <span className="mr-2">{article?.author}</span>
+                          
+                        </a>
                         {article.isSaved ? (
                           <Button className="bg-gray-500 text-white" size="sm" onClick={() => removeFromCart(article)}>
                             <MinusCircle className="mr-2 h-3 w-3" /> Remove
@@ -660,15 +686,7 @@ export function EnhancedNewsFeedComponent() {
 
 
         </div>
-        <Button
-            variant="outline"
-            size="icon"
-            className="fixed bottom-4 right-4 "
-            style={{zIndex:999}}
-            onClick={() => toggleSidebar()}
-          >
-            {isSidebarVisible ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </Button>
+       
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -680,37 +698,42 @@ export function EnhancedNewsFeedComponent() {
               </DialogTitle>
               <DialogDescription className="flex items-center space-x-2 mt-1">
                 <Badge variant="secondary" className="text-xs">{selectedArticle.label}</Badge>
-                <span className="text-gray-400 text-xs">
-                  {new Date(selectedArticle.publishedAt).toLocaleDateString()}
-                </span>
+
               </DialogDescription>
             </DialogHeader>
             <ScrollArea className="flex-grow">
               <div className="space-y-6 p-6">
                 <img src={selectedArticle.image} alt={selectedArticle.title} className="w-full h-64 object-cover rounded-lg shadow-md" />
-                <div className="bg-gray-800 p-4 rounded-lg">
-                  <p className="text-base leading-relaxed text-gray-300">{selectedArticle.content}</p>
-                </div>
+                <div className="bg-gray-800 p-4 rounded-lg markdown">
+                <ReactMarkdown className="text-base leading-relaxed text-gray-300" remarkPlugins={[remarkGfm]}>
+                      {selectedArticle.content}
+                  </ReactMarkdown>
+                  </div>
               </div>
               <div className="border-t border-gray-700 pt-4 px-6">
                 <h3 className="text-lg font-semibold mb-2 text-gray-100">Additional Information</h3>
-                <p className="text-sm text-gray-400">Author: {selectedArticle.author || 'Anonymous'}</p>
+                <p className="text-sm text-gray-500">
+                Author:- 
+                    <span className='text-gray-200'>
+                        {selectedArticle.author || 'Anonymous'}
+                    </span>
+                  </p>
                 <div className="mt-2">
-                  <p className="text-sm font-medium text-gray-300">Explore Further:</p>
-                  {Array.isArray(selectedArticle.urls) && selectedArticle.urls.length > 0 ? (
-                    selectedArticle.urls.map((url, index) => (
-                      <li key={index}>
+                  <p className="text-sm font-medium text-gray-500">Explore Further:</p>
+                  {selectedArticle.urls? (
+
                         <a 
-                          href={url} 
+                          href={(selectedArticle.urls).toString()} 
                           target="_blank" 
                           rel="noopener noreferrer" 
                           className="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-300 flex items-center"
                         >
-                          <span className="mr-2">🔗</span>
-                          Related Resource
+                          <span className="mr-2">🔗{selectedArticle.title}</span>
+                          
                         </a>
-                      </li>
-                    ))
+                        
+                      
+                    
                   ) : (
                     <li className="text-sm text-gray-500 italic">No additional resources available.</li>
                   )}
