@@ -12,8 +12,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PlusCircle, MessageSquare, ShoppingCart, Search, Trash2, Headphones, MessageCircle, X, Menu, PlayCircle, PauseCircle , MinusCircle} from 'lucide-react'
+import { PlusCircle, MessageSquare, ShoppingCart, Search, Trash2, Headphones, MessageCircle, X, Menu, PlayCircle, PauseCircle, MinusCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+
 
 import { Download } from 'lucide-react';
 
@@ -45,7 +46,7 @@ const fetchNews = async (
 ): Promise<Article[]> => {
   try {
     const response = await fetch(`${url}/get_daily_news`, {
-            method: 'POST',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -60,7 +61,7 @@ const fetchNews = async (
     }
 
     const data = await response.json();
-  
+
 
     if (!data.Articles) {
       throw new Error('Articles not found in response');
@@ -71,14 +72,14 @@ const fetchNews = async (
       title: item.title,
       brief: item.brief,
       image: item.image || "https://www.sandipuniversity.edu.in/computer-science/images/header/BTech-CSE-with-specialisation-Artificial-Intelligence-and-Machine-Learning.jpg",
-      content: (item.content || 'Lorem ipsum dolor sit amet...').slice(0, 1000)+'.....',
+      content: (item.content || 'Lorem ipsum dolor sit amet...').slice(0, 1000) + '.....',
       urls: item.urls,
-      author:item.author,
+      author: item.author,
       label: item.label,
     }));
 
     return allNews.filter(
-      (article :Article) =>
+      (article: Article) =>
         article.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
         (category === 'All' || article.label === category)
     ).slice((page - 1) * 10, page * 10);
@@ -101,9 +102,9 @@ export function EnhancedNewsFeedComponent() {
   const [category, setCategory] = useState("All")
   const [isLoading, setIsLoading] = useState(false)
   const [summaries, setSummaries] = useState<{
-      aggregate: string | null | undefined; [key: number]: string 
+    aggregate: string | null | undefined;[key: number]: string
   }>({ aggregate: null })
-// To track which summary is active
+  // To track which summary is active
 
   const [audioMessages, setAudioMessages] = useState<{ [key: string]: string }>({})
   const [chatMessages, setChatMessages] = useState<{ [key: string]: { role: string; content: string }[] }>({})
@@ -132,7 +133,7 @@ export function EnhancedNewsFeedComponent() {
     setIsLoading(false)
   }
 
-  const openModal = (article:Article) => {
+  const openModal = (article: Article) => {
     setSelectedArticle(article)
     setIsModalOpen(true)
   }
@@ -141,7 +142,7 @@ export function EnhancedNewsFeedComponent() {
     setIsModalOpen(false)
   }
 
-  const addToCart = (article :Article) => {
+  const addToCart = (article: Article) => {
     article.isSaved = true;
     if (!cart.some(item => item.id === article.id)) {
       setCart([...cart, article])
@@ -155,7 +156,7 @@ export function EnhancedNewsFeedComponent() {
   //   }));
   //   setActiveSummaryId(null); // Reset active summary
   // };
-  const removeFromCart = (article:Article) => {
+  const removeFromCart = (article: Article) => {
     article.isSaved = false;
     setCart(cart.filter(item => item.id !== article.id))
   }
@@ -176,11 +177,11 @@ export function EnhancedNewsFeedComponent() {
     try {
       const response = await fetch(`${url}/summarize?urls=${articleIds.join(',')}`);
       console.log("Response status:", response.status);
-      
+
       if (!response.ok) {
         throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log("API response data:", data);
 
@@ -197,7 +198,7 @@ export function EnhancedNewsFeedComponent() {
       console.error("Error summarizing articles:", error);
       setSummaries(prevSummaries => ({
         ...prevSummaries,
-        aggregate: `Error occurred while summarizing articles: ${(error as Error).message}`
+        aggregate: `Save your the articles!`
       }));
     }
   }
@@ -208,7 +209,7 @@ export function EnhancedNewsFeedComponent() {
   const handleConvertToAudio = async (articleIds: number[]) => {
     setAudioMessages({ aggregate: "Converting to audio..." });
     setIsLoading(true);
-  
+
     try {
       // Send request to Flask backend with article IDs
       const response = await fetch(`${url}/get_audio`, {
@@ -218,22 +219,22 @@ export function EnhancedNewsFeedComponent() {
         },
         body: JSON.stringify({ urls: articleIds }) // Send the article IDs in the body
       });
-  
+
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-  
+
       // Get the audio file URL directly from the response
       const blob = await response.blob();
       const audioUrl = URL.createObjectURL(blob); // Create a blob URL for the audio file
-  
+
       // Only set the audio message for the last article
       const lastArticleId = articleIds[articleIds.length - 1];
       setAudioMessages(prevMessages => ({
         ...prevMessages,
         [lastArticleId]: audioUrl // Store the blob URL
       }));
-  
+
     } catch (error) {
       console.error("Error converting to audio:", error);
       setAudioMessages({ aggregate: "Error occurred while converting to audio." });
@@ -241,11 +242,11 @@ export function EnhancedNewsFeedComponent() {
       setIsLoading(false);
     }
   };
-  
+
   const toggleAudioPlayback = (articleId: string) => {
     setPlayingAudio(prev => (prev === articleId ? null : articleId));
   };
-  
+
   const downloadAudio = (articleId: string) => {
     const audioMessage = audioMessages[articleId];
     if (audioMessage) {
@@ -267,10 +268,10 @@ export function EnhancedNewsFeedComponent() {
         setCurrentChatArticle(article);
       }
     }
-    
+
     setIsChatModalOpen(true);
     console.log("i am executed");
-  
+
     try {
       // Make a request for the first article or handle it differently if needed
       const response = await fetch(`${url}/chat?urls=${articleIds.join(",")}`); // Join IDs into a comma-separated string
@@ -284,20 +285,20 @@ export function EnhancedNewsFeedComponent() {
       console.error("Error initializing chat:", error);
     }
   };
-  
+
   const handleChatSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault()
-    console.log(chatId , "text" , e);
+    console.log(chatId, "text", e);
     const updatedMessages = [
       ...(currentChatArticle ? chatMessages[currentChatArticle.id] || [] : []),
       { role: 'user', content: chatInput }
     ]
     if (currentChatArticle) {
-    setChatMessages({
-      ...chatMessages,
-      [currentChatArticle.id]: updatedMessages
-    })
-  }
+      setChatMessages({
+        ...chatMessages,
+        [currentChatArticle.id]: updatedMessages
+      })
+    }
     setChatInput("")
     try {
       const response = await fetch(`${url}/continue_chat`, {
@@ -340,36 +341,37 @@ export function EnhancedNewsFeedComponent() {
           rehypePlugins={[rehypeRaw]}
           remarkPlugins={[remarkGfm]}
           components={{
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              h1: ({node, ...props}) => <h1 className="text-xl font-bold my-2" {...props} />,
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              h2: ({node, ...props}) => <h2 className="text-lg font-semibold my-2" {...props} />,
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              h3: ({node, ...props}) => <h3 className="text-md font-medium my-1" {...props} />,
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              p: ({node, ...props}) => <p className="my-1" {...props} />,
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              ul: ({node, ...props}) => <ul className="list-disc list-inside my-1" {...props} />,
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              ol: ({node, ...props}) => <ol className="list-decimal list-inside my-1" {...props} />,
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              // code: ({node, inline, ...props}) => 
-              //   inline 
-              //     ? <code className="bg-gray-200 rounded px-1" {...props} />
-              //     : <pre className="bg-gray-100 rounded p-2 my-1"><code {...props} /></pre>
-            }}
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            h1: ({ node, ...props }) => <h1 className="text-xl font-bold my-2" {...props} />,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            h2: ({ node, ...props }) => <h2 className="text-lg font-semibold my-2" {...props} />,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            h3: ({ node, ...props }) => <h3 className="text-md font-medium my-1" {...props} />,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            p: ({ node, ...props }) => <p className="my-1" {...props} />,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            ul: ({ node, ...props }) => <ul className="list-disc list-inside my-1" {...props} />,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            ol: ({ node, ...props }) => <ol className="list-decimal list-inside my-1" {...props} />,
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            // code: ({node, inline, ...props}) => 
+            //   inline 
+            //     ? <code className="bg-gray-200 rounded px-1" {...props} />
+            //     : <pre className="bg-gray-100 rounded p-2 my-1"><code {...props} /></pre>
+          }}
         >
           {aiResponse}
         </ReactMarkdown>
       );
       if (currentChatArticle) {
-      setChatMessages({
-        ...chatMessages,
-        [currentChatArticle.id]: [
-          ...updatedMessages,
-          { role: 'ai', content: formattedResponse }
-        ]
-      })}
+        setChatMessages({
+          ...chatMessages,
+          [currentChatArticle.id]: [
+            ...updatedMessages,
+            { role: 'ai', content: formattedResponse }
+          ]
+        })
+      }
     } catch (error) {
       console.error("Error in chat:", error);
     }
@@ -388,31 +390,187 @@ export function EnhancedNewsFeedComponent() {
 
   return (
     <div className="min-h-screen bg-background text-xs">
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      {/* <header className="sticky top-0 z-50 w-full border-b bg-gradient-dark-black backdrop-blur"> */}
-  
+
+      {/* Navbar */}
+      <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-2xl supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center">
-          <div className="mr-4 hidden md:flex">
+          <div className="mr-4  md:flex">
             <a href='/'>
-            <Image src="/logo.svg" alt="Logo" width={100} height={100} className="pl-4" />
-
+              <Image src="/logo.svg" alt="Logo" width={100} height={100} className="pl-4" />
             </a>
-            <nav className="flex items-center space-x-6 text-xs font-medium">
-            <Button
-            variant="outline"
-            size="icon"
-            className="fixed bottom-4 top-3 right-4 "
-            style={{zIndex:999}}
-            onClick={() => toggleSidebar()}
-          >
-            {isSidebarVisible ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </Button>
 
-
-            </nav>
+            <div className="flex items-center space-x-6 text-xs font-medium">
+              <Button
+                variant="outline"
+                size="icon"
+                className="fixed bottom-4 top-3 right-4 "
+                style={{ zIndex: 999 }}
+                onClick={() => toggleSidebar()}
+              >
+                {isSidebarVisible ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
         </div>
-      </header>
+      </nav>
+
+      <aside className={`lg:fixed right-0 lg:w-1/3 ${isSidebarVisible ? 'block' : 'hidden lg:block'}`} style={{ display: isSidebarVisible ? 'block' : 'none' }}>
+        <Card className="w-full bg-gradient-to-br from-gray-800 to-gray-900 text-gray-100 border border-gray-700 shadow-lg">
+          <CardHeader className="bg-gray-800 bg-opacity-50">
+            <CardTitle className="flex items-center justify-between text-sm">
+              <span className="flex items-center">
+                <ShoppingCart className="mr-2 text-blue-400" />
+                Saved Articles
+              </span>
+              <Button variant="destructive" size="sm" onClick={clearCart} className="bg-red-500 hover:bg-red-600">
+                <Trash2 className="mr-2 h-4 w-4" /> Clear All
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[400px] w-full rounded-md border border-gray-700 p-4">
+              <AnimatePresence>
+                {cart.map((article) => (
+                  <motion.div
+                    key={article.id}
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="mb-4 last:mb-0"
+                  >
+                    <div className="flex flex-col gap-2 py-2 border-b border-gray-700 last:border-b-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-blue-300">{article.title}</span>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-gray-700 text-blue-200">{article.label}</Badge>
+                          <Button variant="ghost" size="sm" onClick={() => removeFromCart(article)} className="text-gray-400 hover:text-gray-200">
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {summaries[article.id] && (
+                        <div className="text-xs mt-2 text-gray-300">
+                          <strong className="text-blue-300">Summary:</strong> {summaries[article.id]}
+                        </div>
+                      )}
+
+                      {audioMessages[article.id] && (
+                        <div className="text-xs mt-2 text-gray-300">
+                          <strong className="text-blue-300">Audio:</strong>
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleAudioPlayback(article.id.toString())}
+                            className="ml-2 text-blue-400 hover:text-blue-300"
+                          >
+                            {playingAudio === article.id.toString() ? (
+                              <PauseCircle className="h-4 w-4" />
+                            ) : (
+                              <PlayCircle className="h-4 w-4" />
+                            )}
+
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => downloadAudio(article.id.toString())} className="text-gray-400 hover:text-gray-200">
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          {playingAudio === article.id.toString() && (
+                            <audio
+                              autoPlay
+                              controls
+                              className="mt-1 w-full"
+                              onEnded={() => setPlayingAudio(null)}
+                            >
+                              <source src={audioMessages[article.id]} type="audio/mpeg" />
+                              Your browser does not support the audio tag.
+                            </audio>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              {summaries.aggregate && (
+                <div className="mt-4 p-2 border border-gray-700 rounded-md bg-gray-800 bg-opacity-50">
+                  <ReactMarkdown
+                    rehypePlugins={[rehypeRaw]}
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                      h3: ({ node, ...props }) => <h3 className="text-lg font-semibold text-blue-300 mb-2" {...props} />,
+                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                      p: ({ node, ...props }) => <p className="text-sm text-gray-300 mb-2" {...props} />,
+                      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                      strong: ({ node, ...props }) => <strong className="text-blue-200" {...props} />,
+                    }}
+                    className="markdown-body text-gray-200"
+                  >
+                    {summaries.aggregate}
+                  </ReactMarkdown>
+                </div>
+              )}
+            </ScrollArea>
+
+            <div className="flex flex-wrap gap-2 mt-4 justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSummarize(cart.map((article) => article.id))}
+                className="bg-gray-700 bg-opacity-50 text-blue-300 hover:bg-gray-600 hover:text-blue-200 border-gray-600"
+              >
+                <MessageSquare className="mr-2 h-4 w-4" /> Summarize All
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleConvertToAudio(cart.map((article) => article.id))}
+                className="bg-gray-700 bg-opacity-50 text-blue-300 hover:bg-gray-600 hover:text-blue-200 border-gray-600"
+              >
+                <Headphones className="mr-2 h-4 w-4" /> Convert All to Audio
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openChatModal(cart.map((article) => article.id))}
+                className="bg-gray-700 bg-opacity-50 text-blue-300 hover:bg-gray-600 hover:text-blue-200 border-gray-600"
+              >
+                <MessageCircle className="mr-2 h-4 w-4" /> Chat About All
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="mt-4 bg-black">
+          <CardHeader>
+            <CardTitle className="text-sm font-light text-white ">AI/ML Technology Tags</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[120px] w-full rounded-md p-4">
+              <div className="flex flex-wrap gap-3">
+                {[
+                  "AIML",
+                  "AR-VR",
+                  "BLOCKCHAIN",
+
+                ].map((tag, index) => (
+                  <Badge
+                    key={index}
+                    variant="outline"
+                    className="cursor-pointer bg-transparent hover:bg-primary/10 transition-colors text-white duration-300 text-xs font-light"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </aside>
 
       <div className="container mx-auto p-4">
         <div className="flex flex-col lg:flex-row gap-6">
@@ -469,14 +627,14 @@ export function EnhancedNewsFeedComponent() {
                       <CardFooter className="flex justify-between mt-auto">
                         <Button variant="outline" size="sm" onClick={() => openModal(article)}>Read More</Button>
 
-                        <a 
-                          href={(article.urls).toString()} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
+                        <a
+                          href={(article.urls).toString()}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-sm hover:text-blue-500 transition-colors duration-300 flex items-center"
                         >
                           <span className="mr-2">{article?.author}</span>
-                          
+
                         </a>
                         {article.isSaved ? (
                           <Button className="bg-gray-500 text-white" size="sm" onClick={() => removeFromCart(article)}>
@@ -508,7 +666,7 @@ export function EnhancedNewsFeedComponent() {
               <Button
                 onClick={() => {
                   setPage(p => p + 1);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 disabled={newsArticles.length < 10 || isLoading}
               >
@@ -517,176 +675,20 @@ export function EnhancedNewsFeedComponent() {
             </div>
           </main>
 
-          <Button
+          {/* <Button
             variant="outline"
             size="icon"
             className="fixed bottom-4 right-4 lg:hidden"
             onClick={toggleSidebar}
           >
             <Menu className="h-4 w-4" />
-          </Button>
-          
-          <aside className={`lg:fixed right-0 lg:w-1/3 ${isSidebarVisible ? 'block' : 'hidden lg:block'}`} style={{display: isSidebarVisible ? 'block' : 'none'}}>    
-            <Card className="w-full bg-gradient-to-br from-gray-800 to-gray-900 text-gray-100 border border-gray-700 shadow-lg">
-              <CardHeader className="bg-gray-800 bg-opacity-50">
-                <CardTitle className="flex items-center justify-between text-sm">
-                  <span className="flex items-center">
-                    <ShoppingCart className="mr-2 text-blue-400" />
-                    Saved Articles
-                  </span>
-                  <Button variant="destructive" size="sm" onClick={clearCart} className="bg-red-500 hover:bg-red-600">
-                    <Trash2 className="mr-2 h-4 w-4" /> Clear All
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[400px] w-full rounded-md border border-gray-700 p-4">
-                  <AnimatePresence>
-                    {cart.map((article) => (
-                      <motion.div 
-                        key={article.id} 
-                        initial={{ opacity: 0, height: 0 }} 
-                        animate={{ opacity: 1, height: 'auto' }} 
-                        exit={{ opacity: 0, height: 0 }} 
-                        transition={{ duration: 0.3 }}
-                        className="mb-4 last:mb-0"
-                      >
-                        <div className="flex flex-col gap-2 py-2 border-b border-gray-700 last:border-b-0">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-blue-300">{article.title}</span>
-                            <div className="flex items-center gap-2">
-                              <Badge className="bg-gray-700 text-blue-200">{article.label}</Badge>
-                              <Button variant="ghost" size="sm" onClick={() => removeFromCart(article)} className="text-gray-400 hover:text-gray-200">
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
+          </Button> */}
 
-                          {summaries[article.id] && (
-                            <div className="text-xs mt-2 text-gray-300">
-                              <strong className="text-blue-300">Summary:</strong> {summaries[article.id]}
-                            </div>
-                          )}
 
-                          {audioMessages[article.id] && (
-                            <div className="text-xs mt-2 text-gray-300">
-                              <strong className="text-blue-300">Audio:</strong>
-                  
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleAudioPlayback(article.id.toString())}
-                                className="ml-2 text-blue-400 hover:text-blue-300"
-                              >
-                                {playingAudio === article.id.toString() ? (
-                                  <PauseCircle className="h-4 w-4" />
-                                ) : (
-                                  <PlayCircle className="h-4 w-4" />
-                                )}
-
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => downloadAudio(article.id.toString())} className="text-gray-400 hover:text-gray-200">
-                                  <Download className="h-4 w-4" />
-                                </Button>
-                              {playingAudio === article.id.toString() && (
-                                <audio
-                                  autoPlay
-                                  controls
-                                  className="mt-1 w-full"
-                                  onEnded={() => setPlayingAudio(null)}
-                                >
-                                  <source src={audioMessages[article.id]} type="audio/mpeg" />
-                                  Your browser does not support the audio tag.
-                                </audio>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-
-                  {summaries.aggregate && (
-                    <div className="mt-4 p-2 border border-gray-700 rounded-md bg-gray-800 bg-opacity-50">
-                      <ReactMarkdown
-                        rehypePlugins={[rehypeRaw]}
-                        remarkPlugins={[remarkGfm]}
-                        components ={ {
-                          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                          h3: ({node, ...props}) => <h3 className="text-lg font-semibold text-blue-300 mb-2" {...props} />,
-                          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                          p: ({node, ...props}) => <p className="text-sm text-gray-300 mb-2" {...props} />,
-                          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                          strong: ({node, ...props}) => <strong className="text-blue-200" {...props} />,
-                        }}
-                        className="markdown-body text-gray-200"
-                      >
-                        {summaries.aggregate}
-                      </ReactMarkdown>
-                    </div>
-                  )}
-                </ScrollArea>
-
-                <div className="flex flex-wrap gap-2 mt-4 justify-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSummarize(cart.map((article) => article.id))}
-                    className="bg-gray-700 bg-opacity-50 text-blue-300 hover:bg-gray-600 hover:text-blue-200 border-gray-600"
-                  >
-                    <MessageSquare className="mr-2 h-4 w-4" /> Summarize All
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleConvertToAudio(cart.map((article) => article.id))}
-                    className="bg-gray-700 bg-opacity-50 text-blue-300 hover:bg-gray-600 hover:text-blue-200 border-gray-600"
-                  >
-                    <Headphones className="mr-2 h-4 w-4" /> Convert All to Audio
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openChatModal(cart.map((article) => article.id))}
-                    className="bg-gray-700 bg-opacity-50 text-blue-300 hover:bg-gray-600 hover:text-blue-200 border-gray-600"
-                  >
-                    <MessageCircle className="mr-2 h-4 w-4" /> Chat About All
-                  </Button>
-                </div>
-              </CardContent>     
-            </Card>
-            <Card className="mt-4 bg-black">
-              <CardHeader>
-                <CardTitle className="text-sm font-light text-white ">AI/ML Technology Tags</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-[120px] w-full rounded-md p-4">
-                  <div className="flex flex-wrap gap-3">
-                    {[
-                      "AIML",
-                      "AR-VR",
-                      "BLOCKCHAIN",
-
-                    ].map((tag, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="outline" 
-                        className="cursor-pointer bg-transparent hover:bg-primary/10 transition-colors text-white duration-300 text-xs font-light"
-                      >
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </aside>
 
 
         </div>
-       
+
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -705,35 +707,35 @@ export function EnhancedNewsFeedComponent() {
               <div className="space-y-6 p-6">
                 <img src={selectedArticle.image} alt={selectedArticle.title} className="w-full h-64 object-cover rounded-lg shadow-md" />
                 <div className="bg-gray-800 p-4 rounded-lg markdown">
-                <ReactMarkdown className="text-base leading-relaxed text-gray-300" remarkPlugins={[remarkGfm]}>
-                      {selectedArticle.content}
+                  <ReactMarkdown className="text-base leading-relaxed text-gray-300" remarkPlugins={[remarkGfm]}>
+                    {selectedArticle.content}
                   </ReactMarkdown>
-                  </div>
+                </div>
               </div>
               <div className="border-t border-gray-700 pt-4 px-6">
                 <h3 className="text-lg font-semibold mb-2 text-gray-100">Additional Information</h3>
                 <p className="text-sm text-gray-500">
-                Author:- 
-                    <span className='text-gray-200'>
-                        {selectedArticle.author || 'Anonymous'}
-                    </span>
-                  </p>
+                  Author:-
+                  <span className='text-gray-200'>
+                    {selectedArticle.author || 'Anonymous'}
+                  </span>
+                </p>
                 <div className="mt-2">
                   <p className="text-sm font-medium text-gray-500">Explore Further:</p>
-                  {selectedArticle.urls? (
+                  {selectedArticle.urls ? (
 
-                        <a 
-                          href={(selectedArticle.urls).toString()} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-300 flex items-center"
-                        >
-                          <span className="mr-2">🔗{selectedArticle.title}</span>
-                          
-                        </a>
-                        
-                      
-                    
+                    <a
+                      href={(selectedArticle.urls).toString()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-300 flex items-center"
+                    >
+                      <span className="mr-2">🔗{selectedArticle.title}</span>
+
+                    </a>
+
+
+
                   ) : (
                     <li className="text-sm text-gray-500 italic">No additional resources available.</li>
                   )}
@@ -749,7 +751,7 @@ export function EnhancedNewsFeedComponent() {
         )}
       </Dialog>
 
-      <ChatDialog 
+      <ChatDialog
         isChatModalOpen={isChatModalOpen}
         setIsChatModalOpen={setIsChatModalOpen}
         currentChatArticle={currentChatArticle}
