@@ -67,7 +67,10 @@ const fetchNews = async (
       throw new Error('Articles not found in response');
     }
     // ai ml ar vr block chain
-    const allNews = data.Articles.map((item: Article) => ({
+    const allNews = data.Articles.
+    filter((item: Article) => item.title !== "[Removed]" && !item.content.includes("Removed") && item.content.length > 40 )
+    .map((item: Article) => ({
+
       id: item.id,
       title: item.title,
       brief: item.brief,
