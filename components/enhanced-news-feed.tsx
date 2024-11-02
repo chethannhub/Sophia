@@ -23,7 +23,7 @@ import ChatDialog from "./ChatDialog"
 
 // Add this interface near the top of your file
 
-const url = "https://sophia2-ewcwenhcd6ane9eq.southindia-01.azurewebsites.net/";
+const url = "https://sophia2-ewcwenhcd6ane9eq.southindia-01.azurewebsites.net";
 
 interface Article {
   publishedAt: string | number | Date;
