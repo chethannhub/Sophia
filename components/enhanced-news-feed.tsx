@@ -45,15 +45,11 @@ const fetchNews = async (
   category: string
 ): Promise<Article[]> => {
   try {
-    const response = await fetch(`${url}/get_daily_news`, {
-      method: 'POST',
+    const response = await fetch(`https://sophia-v0.azurewebsites.net/get_daily_news?query_edge=aiml&query_news=ml`, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        query_news: 'ml',
-        query_edge: 'aiml',
-      }),
     });
 
     if (!response.ok) {
