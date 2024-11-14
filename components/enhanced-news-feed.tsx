@@ -45,11 +45,15 @@ const fetchNews = async (
   category: string
 ): Promise<Article[]> => {
   try {
-    const response = await fetch(`https://sophia-v0.azurewebsites.net/get_daily_news?query_edge=aiml&query_news=ml`, {
-      method: 'GET',
+    const response = await fetch(`${url}/get_daily_news`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        query_news: 'ml',
+        query_edge: 'aiml',
+      }),
     });
 
     if (!response.ok) {
@@ -57,12 +61,13 @@ const fetchNews = async (
     }
 
     const data = await response.json();
+   
 
 
 
     // ai ml ar vr block chain
-    const allNews = data.Articles.
-    filter((item: Article) => item.title !== "[Removed]" && !item.content.includes("Removed") && item.content.length > 40 )
+    const allNews = data
+    .filter((item: Article) => item.title !== "[Removed]" && !item.content.includes("Removed") && item.content.length > 40 )
     .map((item: Article) => ({
 
       id: item.id,
