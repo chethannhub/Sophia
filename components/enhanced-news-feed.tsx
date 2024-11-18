@@ -214,13 +214,7 @@ export function EnhancedNewsFeedComponent() {
 
     try {
       // Send request to Flask backend with article IDs
-      const response = await fetch(`${url}/get_audio`, {
-        method: 'POST', // Use POST if your backend expects it, otherwise keep it GET
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ urls: articleIds }) // Send the article IDs in the body
-      });
+      const response = await fetch(`${url}/get_audio/urls=${articleIds.join(',')}`);
 
       if (!response.ok) {
         throw new Error('Network response was not ok');
