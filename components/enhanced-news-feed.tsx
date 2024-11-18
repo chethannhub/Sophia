@@ -214,7 +214,7 @@ export function EnhancedNewsFeedComponent() {
 
     try {
       // Send request to Flask backend with article IDs
-      const response = await fetch(`${url}/get_audio/urls=${articleIds.join(',')}`);
+      const response = await fetch(`${url}/get_audio?urls=${articleIds.join(',')}`);
 
       if (!response.ok) {
         throw new Error('Network response was not ok');
