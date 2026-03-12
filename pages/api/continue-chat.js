@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(`http://34.68.130.177/continue_chat`, {
+    const response = await fetch(`http://localhost:5001/continue_chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

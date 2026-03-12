@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch("http://34.68.130.177/get_daily_news", {
+    const response = await fetch("http://localhost:5001/get_daily_news", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

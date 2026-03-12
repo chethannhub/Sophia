@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch("http://34.68.130.177/generate_audio", {
+    const response = await fetch("http://localhost:5001/get_audio", {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -30,8 +30,10 @@ export default async function handler(req, res) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-    res.status(200).json(data);
+    const contentType = response.headers.get('content-type') || 'audio/mpeg';
+    res.setHeader('Content-Type', contentType);
+    const buffer = await response.arrayBuffer();
+    res.send(Buffer.from(buffer));
   } catch (error) {
     console.error('Error generating audio:', error);
     res.status(500).json({ 

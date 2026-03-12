@@ -25,7 +25,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(`http://34.68.130.177/get_audio?urls=${urls}`, {
+    const response = await fetch(`http://localhost:5001/get_audio?urls=${urls}`, {
       method: 'GET',
     });
 

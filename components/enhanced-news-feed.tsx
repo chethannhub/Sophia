@@ -39,55 +39,28 @@ interface Article {
   isSaved?: boolean;
 }
 
-// Simulated API call for fetching news
-const fetchNews = async (
-  page: number,
-  searchTerm: string,
-  category: string
-): Promise<Article[]> => {
+// Fetch ALL articles once from the backend — filtering/pagination is done client-side
+const fetchAllNews = async (): Promise<Article[]> => {
   try {
     const response = await fetch(`${API_BASE}/api/news`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query_news: 'ml',
-        query_edge: 'aiml',
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query_news: 'ml', query_edge: 'aiml' }),
     });
-
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.statusText}`);
-    }
-
+    if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
     const data = await response.json();
-   
-
-
-
-    // ai ml ar vr block chain
-
-  const allNews = (data?.Articles || [])
-    .filter((item: Article) => item.title !== "[Removed]" && !item.content.includes("Removed") && item.content.length > 40 )
-    .map((item: Article) => ({
-
-      id: item.id,
-      title: item.title,
-      brief: item.brief,
-      image: item.image || "https://www.sandipuniversity.edu.in/computer-science/images/header/BTech-CSE-with-specialisation-Artificial-Intelligence-and-Machine-Learning.jpg",
-      content: (item.content || 'Lorem ipsum dolor sit amet...').slice(0, 1000) + '.....',
-      urls: item.urls,
-      author: item.author,
-      label: item.label,
-    }));
-
-  return allNews.filter(
-    (article: Article) =>
-      article.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (category === 'All' || article.label === category)
-  ).slice((page - 1) * 10, page * 10);
-
+    return (data?.Articles || [])
+      .filter((item: Article) => item.title !== "[Removed]" && !item.content.includes("Removed") && item.content.length > 40)
+      .map((item: Article) => ({
+        id: item.id,
+        title: item.title,
+        brief: item.brief,
+        image: item.image || "https://www.sandipuniversity.edu.in/computer-science/images/header/BTech-CSE-with-specialisation-Artificial-Intelligence-and-Machine-Learning.jpg",
+        content: (item.content || 'Lorem ipsum dolor sit amet...').slice(0, 1000) + '.....',
+        urls: item.urls,
+        author: item.author,
+        label: item.label,
+      }));
   } catch (error) {
     console.error('Fetch News Error:', error);
     return [];
@@ -98,6 +71,7 @@ const fetchNews = async (
 
 
 export function EnhancedNewsFeedComponent() {
+  const [allArticles, setAllArticles] = useState<Article[]>([])
   const [newsArticles, setNewsArticles] = useState<Article[]>([])
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
   const [cart, setCart] = useState<Article[]>([])
@@ -121,22 +95,33 @@ export function EnhancedNewsFeedComponent() {
   const [chatId, setChatId] = useState(null);
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
 
+  // Fetch all articles ONCE on mount — backend has a day-level file cache so this is fast after the first call
   useEffect(() => {
-    loadNews()
-  }, [page, searchTerm, category])
+    const init = async () => {
+      setIsLoading(true)
+      const articles = await fetchAllNews()
+      setAllArticles(articles)
+      setIsLoading(false)
+    }
+    init()
+  }, [])
+
+  // Filter + paginate client-side whenever filters or the source data change
+  useEffect(() => {
+    const filtered = allArticles
+      .filter((article) =>
+        article.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        (category === 'All' || article.label === category)
+      )
+      .slice((page - 1) * 10, page * 10)
+    setNewsArticles(filtered)
+  }, [allArticles, page, searchTerm, category])
 
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" })
     }
   }, [chatMessages])
-
-  const loadNews = async () => {
-    setIsLoading(true)
-    const articles = await fetchNews(page, searchTerm, category)
-    setNewsArticles(articles)
-    setIsLoading(false)
-  }
 
   const openModal = (article: Article) => {
     setSelectedArticle(article)
@@ -625,7 +610,7 @@ export function EnhancedNewsFeedComponent() {
                 <SelectContent>
                   <SelectItem value="All">All Categories</SelectItem>
                   <SelectItem value="AIML">AIML</SelectItem>
-                  {/* <SelectItem value="AR-VR">AR-VR</SelectItem> */}
+                  <SelectItem value="AR-VR">AR-VR</SelectItem>
                   <SelectItem value="Block Chain">Block Chain</SelectItem>
                 </SelectContent>
               </Select>

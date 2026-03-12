@@ -25,7 +25,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(`http://34.68.130.177/summarize?urls=${urls}`, {
+    const response = await fetch(`http://localhost:5001/summarize?urls=${urls}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
