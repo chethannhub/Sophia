@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PlusCircle, MessageSquare, ShoppingCart, Search, Trash2, Headphones, MessageCircle, X, Menu, PlayCircle, PauseCircle, MinusCircle } from 'lucide-react'
+import { PlusCircle, MessageSquare, ShoppingCart, Search, Trash2, Headphones, MessageCircle, X, Menu, PlayCircle, PauseCircle, MinusCircle, LoaderCircle, CheckCircle2, AudioLines } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 
@@ -49,18 +49,29 @@ const fetchAllNews = async (): Promise<Article[]> => {
     });
     if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
     const data = await response.json();
-    return (data?.Articles || [])
-      .filter((item: Article) => item.title !== "[Removed]" && !item.content.includes("Removed") && item.content.length > 40)
-      .map((item: Article) => ({
-        id: item.id,
-        title: item.title,
-        brief: item.brief,
+    const rawArticles = Array.isArray(data?.Articles)
+      ? data.Articles
+      : Array.isArray(data?.articles)
+        ? data.articles
+        : [];
+
+    return rawArticles
+      .map((item: Article, index: number) => {
+        const title = String(item?.title || '').trim();
+        const content = String(item?.content || '');
+
+        return {
+        id: Number.isFinite(Number(item?.id)) ? Number(item.id) : index + 1,
+        title,
+        brief: String(item?.brief || content.slice(0, 180) || 'No summary available.'),
         image: item.image || "https://www.sandipuniversity.edu.in/computer-science/images/header/BTech-CSE-with-specialisation-Artificial-Intelligence-and-Machine-Learning.jpg",
-        content: (item.content || 'Lorem ipsum dolor sit amet...').slice(0, 1000) + '.....',
+        content: (content || 'Lorem ipsum dolor sit amet...').slice(0, 1000) + '.....',
         urls: item.urls,
-        author: item.author,
-        label: item.label,
-      }));
+        author: String(item?.author || 'Unknown'),
+        label: String(item?.label || 'AIML'),
+      };
+      })
+      .filter((item: Article) => item.title && item.title !== "[Removed]");
   } catch (error) {
     console.error('Fetch News Error:', error);
     return [];
@@ -94,6 +105,25 @@ export function EnhancedNewsFeedComponent() {
   const [isSidebarVisible, setIsSidebarVisible] = useState(false)
   const [chatId, setChatId] = useState(null);
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
+  const [aggregateAudioStatus, setAggregateAudioStatus] = useState<'idle' | 'converting' | 'ready' | 'error'>('idle')
+
+  const clearAggregateAudio = () => {
+    setAudioMessages((prev) => {
+      if (typeof prev.aggregate === 'string' && prev.aggregate.startsWith('blob:')) {
+        URL.revokeObjectURL(prev.aggregate);
+      }
+
+      const nextMessages = { ...prev };
+      delete nextMessages.aggregate;
+      return nextMessages;
+    });
+
+    if (playingAudio === 'aggregate') {
+      setPlayingAudio(null);
+    }
+
+    setAggregateAudioStatus('idle');
+  }
 
   // Fetch all articles ONCE on mount — backend has a day-level file cache so this is fast after the first call
   useEffect(() => {
@@ -122,6 +152,14 @@ export function EnhancedNewsFeedComponent() {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" })
     }
   }, [chatMessages])
+
+  useEffect(() => {
+    return () => {
+      if (typeof audioMessages.aggregate === 'string' && audioMessages.aggregate.startsWith('blob:')) {
+        URL.revokeObjectURL(audioMessages.aggregate);
+      }
+    }
+  }, [audioMessages.aggregate])
 
   const openModal = (article: Article) => {
     setSelectedArticle(article)
@@ -152,6 +190,9 @@ export function EnhancedNewsFeedComponent() {
   }
 
   const clearCart = () => {
+    if (typeof audioMessages.aggregate === 'string' && audioMessages.aggregate.startsWith('blob:')) {
+      URL.revokeObjectURL(audioMessages.aggregate);
+    }
     for (const article of cart) {
       article.isSaved = false;
     }
@@ -159,6 +200,8 @@ export function EnhancedNewsFeedComponent() {
     setSummaries({ aggregate: null })
     setAudioMessages({})
     setChatMessages({})
+    setAggregateAudioStatus('idle')
+    setPlayingAudio(null)
   }
   const handleSummarize = async (articleIds: number[]) => {
     console.log('Summarizing articles:', articleIds);
@@ -197,6 +240,20 @@ export function EnhancedNewsFeedComponent() {
     setPage(1); // Reset page number to 1
   };
   const handleConvertToAudio = async (articleIds: number[]) => {
+    if (aggregateAudioStatus === 'ready') {
+      clearAggregateAudio();
+      return;
+    }
+
+    if (aggregateAudioStatus === 'converting' || articleIds.length === 0) {
+      return;
+    }
+
+    if (typeof audioMessages.aggregate === 'string' && audioMessages.aggregate.startsWith('blob:')) {
+      URL.revokeObjectURL(audioMessages.aggregate);
+    }
+
+    setAggregateAudioStatus('converting');
     setAudioMessages(prev => ({ ...prev, aggregate: "Converting to audio..." }));
     setIsLoading(true);
 
@@ -211,10 +268,12 @@ export function EnhancedNewsFeedComponent() {
       const audioUrl = URL.createObjectURL(blob);
 
       setAudioMessages(prev => ({ ...prev, aggregate: audioUrl }));
+      setAggregateAudioStatus('ready');
 
     } catch (error) {
       console.error("Error converting to audio:", error);
       setAudioMessages(prev => ({ ...prev, aggregate: "Error occurred while converting to audio." }));
+      setAggregateAudioStatus('error');
     } finally {
       setIsLoading(false);
     }
@@ -365,6 +424,21 @@ export function EnhancedNewsFeedComponent() {
     console.log('Chat cleared');
   };
 
+  const isAggregateAudioReady = aggregateAudioStatus === 'ready';
+  const isAggregateAudioConverting = aggregateAudioStatus === 'converting';
+  const aggregateAudioButtonLabel = isAggregateAudioConverting
+    ? 'Converting Audio...'
+    : isAggregateAudioReady
+      ? 'Clear Audio'
+      : 'Convert All to Audio';
+  const aggregateAudioButtonClassName = isAggregateAudioConverting
+    ? 'bg-amber-500 text-slate-950 border-amber-300 hover:bg-amber-400 shadow-lg shadow-amber-500/20'
+    : isAggregateAudioReady
+      ? 'bg-emerald-500 text-white border-emerald-300 hover:bg-emerald-400 shadow-lg shadow-emerald-500/20'
+      : aggregateAudioStatus === 'error'
+        ? 'bg-rose-500 text-white border-rose-300 hover:bg-rose-400 shadow-lg shadow-rose-500/20'
+        : 'bg-gray-700 bg-opacity-50 text-blue-300 hover:bg-gray-600 hover:text-blue-200 border-gray-600';
+
   return (
     <div className="min-h-screen bg-background text-xs">
 
@@ -488,44 +562,48 @@ export function EnhancedNewsFeedComponent() {
                   >
                     {summaries.aggregate}
                   </ReactMarkdown>
-                  { audioMessages.aggregate && typeof audioMessages.aggregate === 'string' && !audioMessages.aggregate.startsWith('Converting') && !audioMessages.aggregate.startsWith('Error') && (
-                    <div className="mt-4">
-                      <strong className="text-blue-300 text-sm">Aggregate Audio:</strong>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleAudioPlayback('aggregate')}
-                          className="text-blue-400 hover:text-blue-300"
-                        >
-                          {playingAudio === 'aggregate' ? (
-                            <PauseCircle className="h-4 w-4" />
-                          ) : (
-                            <PlayCircle className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => downloadAudio('aggregate')} 
-                          className="text-gray-400 hover:text-gray-200"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      {playingAudio === 'aggregate' && (
-                        <audio
-                          autoPlay
-                          controls
-                          className="mt-2 w-full"
-                          onEnded={() => setPlayingAudio(null)}
-                        >
-                          <source src={audioMessages.aggregate} type="audio/mpeg" />
-                          Your browser does not support the audio tag.
-                        </audio>
-                      )}
+                </div>
+              )}
+
+              {audioMessages.aggregate && typeof audioMessages.aggregate === 'string' && !audioMessages.aggregate.startsWith('Converting') && !audioMessages.aggregate.startsWith('Error') && (
+                <div className="mt-4 rounded-md border border-emerald-400/30 bg-emerald-500/10 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <strong className="text-sm text-emerald-200">Generated Audio</strong>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleAudioPlayback('aggregate')}
+                        className="text-emerald-200 hover:bg-emerald-500/20 hover:text-emerald-100"
+                      >
+                        {playingAudio === 'aggregate' ? (
+                          <PauseCircle className="h-4 w-4" />
+                        ) : (
+                          <PlayCircle className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => downloadAudio('aggregate')}
+                        className="text-emerald-200 hover:bg-emerald-500/20 hover:text-emerald-100"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
                     </div>
-                  )}
+                  </div>
+
+                  <audio
+                    controls
+                    className="mt-3 w-full"
+                    autoPlay={playingAudio === 'aggregate'}
+                    onPlay={() => setPlayingAudio('aggregate')}
+                    onPause={() => setPlayingAudio((current) => current === 'aggregate' ? null : current)}
+                    onEnded={() => setPlayingAudio(null)}
+                  >
+                    <source src={audioMessages.aggregate} type="audio/mpeg" />
+                    Your browser does not support the audio tag.
+                  </audio>
                 </div>
               )}
             </ScrollArea>
@@ -544,9 +622,20 @@ export function EnhancedNewsFeedComponent() {
                 variant="outline"
                 size="sm"
                 onClick={() => handleConvertToAudio(cart.map((article) => article.id))}
-                className="bg-gray-700 bg-opacity-50 text-blue-300 hover:bg-gray-600 hover:text-blue-200 border-gray-600"
+                disabled={cart.length === 0 || isAggregateAudioConverting}
+                aria-pressed={isAggregateAudioReady || isAggregateAudioConverting}
+                className={`${aggregateAudioButtonClassName} min-w-[180px] transition-all duration-300 ${isAggregateAudioConverting ? 'scale-[1.02]' : ''}`}
               >
-                <Headphones className="mr-2 h-4 w-4" /> Convert All to Audio
+                {isAggregateAudioConverting ? (
+                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                ) : isAggregateAudioReady ? (
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                ) : aggregateAudioStatus === 'error' ? (
+                  <AudioLines className="mr-2 h-4 w-4" />
+                ) : (
+                  <Headphones className="mr-2 h-4 w-4" />
+                )}
+                {aggregateAudioButtonLabel}
               </Button>
 
               <Button
@@ -558,6 +647,29 @@ export function EnhancedNewsFeedComponent() {
                 <MessageCircle className="mr-2 h-4 w-4" /> Chat About All
               </Button>
             </div>
+
+            <AnimatePresence mode="wait">
+              {(isAggregateAudioConverting || isAggregateAudioReady || aggregateAudioStatus === 'error') && (
+                <motion.div
+                  key={aggregateAudioStatus}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.2 }}
+                  className={`mt-3 rounded-md border px-3 py-2 text-center text-xs ${
+                    isAggregateAudioConverting
+                      ? 'border-amber-400/40 bg-amber-500/10 text-amber-200'
+                      : isAggregateAudioReady
+                        ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200'
+                        : 'border-rose-400/40 bg-rose-500/10 text-rose-200'
+                  }`}
+                >
+                  {isAggregateAudioConverting && 'Audio conversion is in progress for all saved articles.'}
+                  {isAggregateAudioReady && 'Audio is ready. Click the button again to clear the generated file.'}
+                  {aggregateAudioStatus === 'error' && 'Audio conversion failed. Click the button to try again.'}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </CardContent>
         </Card>
         <Card className="mt-4 bg-black">
@@ -666,6 +778,12 @@ export function EnhancedNewsFeedComponent() {
                 ))}
               </AnimatePresence>
             </div>
+
+            {!isLoading && newsArticles.length === 0 && (
+              <div className="mt-8 rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
+                No articles returned from backend right now. Try again shortly or verify your backend data source.
+              </div>
+            )}
 
             <div className="mt-6 flex justify-between items-center">
               <Button

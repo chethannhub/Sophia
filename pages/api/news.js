@@ -1,3 +1,5 @@
+import { getBackendBaseUrl } from '../../lib/backend-url';
+
 // API route to proxy news requests to avoid HTTPS/HTTP mixed content issues
 export default async function handler(req, res) {
   const { method } = req;
@@ -18,7 +20,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch("http://localhost:5001/get_daily_news", {
+    const backendBaseUrl = getBackendBaseUrl();
+    const response = await fetch(`${backendBaseUrl}/get_daily_news`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

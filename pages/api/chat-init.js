@@ -1,3 +1,5 @@
+import { getBackendBaseUrl } from '../../lib/backend-url';
+
 // API route to proxy chat initialization requests
 export default async function handler(req, res) {
   const { method, query } = req;
@@ -25,7 +27,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(`http://localhost:5001/chat?urls=${urls}`, {
+    const backendBaseUrl = getBackendBaseUrl();
+    const response = await fetch(`${backendBaseUrl}/chat?urls=${urls}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

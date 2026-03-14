@@ -1,3 +1,5 @@
+import { getBackendBaseUrl } from '../../lib/backend-url';
+
 // API route to proxy audio generation requests
 export default async function handler(req, res) {
   const { method } = req;
@@ -18,7 +20,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch("http://localhost:5001/get_audio", {
+    const backendBaseUrl = getBackendBaseUrl();
+    const response = await fetch(`${backendBaseUrl}/get_audio`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
