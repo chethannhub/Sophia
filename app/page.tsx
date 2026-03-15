@@ -1,5 +1,5 @@
-import { EnhancedNewsFeedComponent } from "@/components/enhanced-news-feed"
+import HomePage from "@/components/HomePage"
 
 export default function Page() {
-  return <EnhancedNewsFeedComponent />
+  return <HomePage />
 }
