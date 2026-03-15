@@ -21,7 +21,7 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.7 },
+    transition: { duration: 0.5 },
   },
 };
 
@@ -159,20 +159,21 @@ export default function HomePage() {
           variants={floatingVariants}
           initial="initial"
           animate="animate"
+          style={{ willChange: 'transform', pointerEvents: 'none' }}
         />
         <motion.div
           className="absolute top-20 right-20 w-10 h-10 bg-purple-500 rounded-full"
           variants={floatingVariants}
           initial="initial"
           animate="animate"
-          style={{ animationDelay: '1s' }}
+          style={{ animationDelay: '1s', willChange: 'transform', pointerEvents: 'none' }}
         />
         <motion.div
           className="absolute bottom-10 left-20 w-12 h-12 bg-blue-300 rounded-full"
           variants={floatingVariants}
           initial="initial"
           animate="animate"
-          style={{ animationDelay: '2s' }}
+          style={{ animationDelay: '2s', willChange: 'transform', pointerEvents: 'none' }}
         />
 
         <div className="max-w-2xl mx-auto text-center p-4 z-10">
@@ -180,7 +181,8 @@ export default function HomePage() {
             className="text-5xl md:text-6xl lg:text-7xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1 }}
+            transition={{ duration: 0.6 }}
+            style={{ willChange: 'opacity' }}
           >
             Elevate Your Knowledge: Curated Insights, Anytime, Anywhere
           </motion.h1>
@@ -189,7 +191,8 @@ export default function HomePage() {
             className="text-lg md:text-xl text-gray-300 mb-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 1 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            style={{ willChange: 'opacity' }}
           >
             Stay ahead with daily top articles and audio insights from AI personas for busy professionals. Discover key trends and boost your expertise effortlessly!
           </motion.p>
@@ -197,7 +200,8 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1, duration: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            style={{ willChange: 'transform, opacity' }}
           >
             <a href="/main">
               <button className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-8 py-3 rounded-full font-medium hover:from-blue-400 hover:to-purple-400 transition">
@@ -219,8 +223,9 @@ export default function HomePage() {
             className="text-center mb-16"
             initial={{ opacity: 0, y: -20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1 }}
+            viewport={{ once: true, margin: "0px 0px -50px 0px" }}
+            transition={{ duration: 0.5 }}
+            style={{ willChange: 'transform, opacity' }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4">Why Choose Sophia?</h2>
             <p className="text-gray-400 text-lg max-w-3xl mx-auto">
@@ -238,9 +243,10 @@ export default function HomePage() {
                   variants={itemVariants}
                   initial="hidden"
                   whileInView="visible"
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex flex-col h-full items-center border border-gray-700 bg-gray-800 p-8 rounded-xl shadow-xl text-center transition-all duration-300 hover:scale-110 hover:bg-[#232f3f] hover:shadow-2xl cursor-pointer"
+                  viewport={{ once: true, margin: "0px 0px -100px 0px" }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  className="flex flex-col h-full items-center border border-gray-700 bg-gray-800 p-8 rounded-xl shadow-xl text-center transition-all duration-300 hover:scale-105 hover:bg-[#232f3f] hover:shadow-2xl cursor-pointer will-change-transform"
+                  style={{ willChange: 'transform, opacity' }}
                 >
                   <div className="mb-4">
                     <Icon className={`text-4xl ${feature.color}`} />
@@ -260,10 +266,11 @@ export default function HomePage() {
           {/* CTA Section */}
           <motion.div
             className="text-center mt-16"
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            viewport={{ once: true, margin: "0px 0px -50px 0px" }}
+            transition={{ duration: 0.4 }}
+            style={{ willChange: 'transform, opacity' }}
           >
             <h2 className="text-3xl md:text-4xl font-semibold mb-4 bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
               Ready to Personalize Your Learning?

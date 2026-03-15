@@ -41,6 +41,19 @@ interface Article {
 
 // Fetch ALL articles once from the backend — filtering/pagination is done client-side
 const fetchAllNews = async (): Promise<Article[]> => {
+  // Check cache first (valid for 1 hour)
+  const cached = typeof window !== 'undefined' ? localStorage.getItem('newsFeedCache') : null;
+  if (cached) {
+    try {
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < 3600000) { // 1 hour cache
+        return data;
+      }
+    } catch (e) {
+      localStorage.removeItem('newsFeedCache');
+    }
+  }
+
   try {
     const response = await fetch(`${API_BASE}/api/news`, {
       method: 'POST',
@@ -55,7 +68,7 @@ const fetchAllNews = async (): Promise<Article[]> => {
         ? data.articles
         : [];
 
-    return rawArticles
+    const articles = rawArticles
       .map((item: Article, index: number) => {
         const title = String(item?.title || '').trim();
         const content = String(item?.content || '');
@@ -72,6 +85,13 @@ const fetchAllNews = async (): Promise<Article[]> => {
       };
       })
       .filter((item: Article) => item.title && item.title !== "[Removed]");
+    
+    // Cache the results
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('newsFeedCache', JSON.stringify({ data: articles, timestamp: Date.now() }));
+    }
+    
+    return articles;
   } catch (error) {
     console.error('Fetch News Error:', error);
     return [];
@@ -729,25 +749,49 @@ export function EnhancedNewsFeedComponent() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <AnimatePresence>
-                {newsArticles.map((article) => (
-                  <motion.div
-                    key={article.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                  >
+              {isLoading ? (
+                // Loading skeleton
+                Array.from({ length: 4 }).map((_, idx) => (
+                  <div key={`skeleton-${idx}`} className="animate-pulse">
                     <Card className="overflow-hidden h-full flex flex-col">
-                      <div className="relative h-48">
-                        <img src={article.image} alt={article.title} className="absolute inset-0 w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-end p-4">
-                          <Badge variant="secondary" className="mb-2">{article.label}</Badge>
-                        </div>
-                      </div>
+                      <div className="relative h-48 bg-gray-300 dark:bg-gray-700"></div>
                       <CardHeader>
-                        <CardTitle className="text-sm">{article.title}</CardTitle>
+                        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4"></div>
+                        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6 mt-2"></div>
                       </CardHeader>
+                      <CardContent>
+                        <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-full"></div>
+                        <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-full mt-2"></div>
+                        <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-2/3 mt-2"></div>
+                      </CardContent>
+                      <CardFooter className="flex justify-between mt-auto">
+                        <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-20"></div>
+                        <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-20"></div>
+                        <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-20"></div>
+                      </CardFooter>
+                    </Card>
+                  </div>
+                ))
+              ) : (
+                <AnimatePresence>
+                  {newsArticles.map((article) => (
+                    <motion.div
+                      key={article.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Card className="overflow-hidden h-full flex flex-col">
+                        <div className="relative h-48">
+                          <img src={article.image} alt={article.title} className="absolute inset-0 w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-end p-4">
+                            <Badge variant="secondary" className="mb-2">{article.label}</Badge>
+                          </div>
+                        </div>
+                        <CardHeader>
+                          <CardTitle className="text-sm">{article.title}</CardTitle>
+                        </CardHeader>
                       <CardContent>
                         <p className="text-xs">{article.brief}</p>
                       </CardContent>
@@ -776,7 +820,8 @@ export function EnhancedNewsFeedComponent() {
                     </Card>
                   </motion.div>
                 ))}
-              </AnimatePresence>
+                </AnimatePresence>
+              )}
             </div>
 
             {!isLoading && newsArticles.length === 0 && (
